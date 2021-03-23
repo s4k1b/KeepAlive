@@ -6,6 +6,10 @@
 - *Non Exception Failure:* Typescript checks what properties of an object are existing and accessible. So, it will throw error when we try to access an object property that does not exist.
 - *Types of Tooling:*TypeScript can deliver “quick fixes” to automatically fix errors, refactorings to easily re-organize code, and useful navigation features for jumping to definitions of a variable, or finding all references to a given variable.
 
+## Why is typescript called the structurally typed type system
+
+Because typescript is only concered with the structure and capabilities of types.
+
 ## Compiler
 
 - *Install* - `npm i -g typescript`
@@ -13,4 +17,134 @@
   - The compiler will compile your typescript code to javascript and generate a javascript file
   - If the typescript code produces typed errors, the compiler will show an error, although the corresponding working javascript file will be created.
   - To prevent the compiler from showing the error run `tsc --noEmitOnError <path to the .ts file>`
-`
+  - By default typscript compiler generates javascript code in ES3 (older version). We can set `target` flag to set our target javascript version. eg `tsc --target es2015 <path to the .ts file>`. This will produce javascript code in ES6.
+
+## Strictness
+
+There are two types of strictness supported by typescript.
+
+- *default:* Types are optional, inference takes the most linient the most linient types and there is no checking for potential `null/undefined` values. This mode is helpful when migrating javascript to typescript. Here, typescript stays out of our way of migrating.
+- *strict:* This turns the type checking of typescript from a switch to a dial. User can set different levels of strictness, based on their preference. If we are building an app from group up, it is suggested to turn the dial to maximum strictness as it will provide more helpful tooling and type checking.
+
+Typescript has several typechecking strictness flags, that can be turned on and off individually from the command line (`strict` flag) or from the `tsconfig.json` file (`"strict": true`).
+
+- `noImplicitAny`: prevents typescript from implicitely inferring the type of a variable to any. Typescript will throw error in that case.
+- `strictNullChecks`: makes handling `undefined/null` assigning more explicit. Makes sure we do not forget to handle them.
+
+## Everyday types
+
+- *string*: Denotes string type variables. `let a: string = "sakib"`
+- *number*: Denotes number type variables. `let a: number = 42`
+- *boolean*: Denotes boolean type variables. `let a: boolean = false`
+- *Array*: Denotes an array type variable line `[1, 2, 3]`. Type can be denoted by either `string[]` or `number[]`, depending on the array content. They can also be like `Array<number>`. `let arr: string[]`
+- *any*: This type can be used when we do not want to go throw the process of defining a proper type. This should be avoided.
+
+  ```ts
+  let obj: any = { x: 0 };
+  // None of these lines of code are errors
+  obj.foo();
+  obj();
+  obj.bar = 100;
+  obj = "hello";
+  const n: number = obj;
+  ```
+
+## The type annotation of variables
+
+In typescript we can explicitely specify the type of a variable by using `let`, `const` or `var`. eg: `let a: string = "sakib"`. But this is not required because typescript can automatically infer the type of a varibe by analyzing it's initializer.
+
+```ts
+// No type annotation needed -- 'myName' inferred as type 'string'
+let myName = "Alice";
+```
+
+## Functions
+
+In typescript, we can specify the types of a funciton's parameter as well as the type of it's return value. eg:
+
+```ts
+function myFunc(a: string, b: number): string {
+  return `string is ${string} and number is ${number}`;
+}
+```
+
+### Anonymous functions
+
+When a function appears in place where typescript can automatically determine how it's going to be called, it's parameters are automatically given types. This process is called *contextual typing*, because the *context* in which the function is called informs typescript what types are it's parameters. eg:
+
+```ts
+// No type annotations here, but TypeScript can spot the bug
+const names = ["Alice", "Bob", "Eve"];
+
+// Contextual typing for function
+names.forEach(function (s) {
+  console.log(s.toUppercase());
+  //Property 'toUppercase' does not exist on type 'string'. Did you mean 'toUpperCase'?
+});
+
+// Contextual typing also applies to arrow functions
+names.forEach((s) => {
+  console.log(s.toUppercase());
+  //Property 'toUppercase' does not exist on type 'string'. Did you mean 'toUpperCase'?
+});
+```
+
+*I think, this applies to function callbacks*
+
+### Object types
+
+To define an object type, we simply list all it's properties along with their respective types. The type part of each property is optional, if not specified, it will be `any` type.
+
+```ts
+function printCoord(pt: {x: Number, y: Number}) {
+  console.log("Coordinate is", pt.x, "and ", pt,y);
+}
+```
+
+We can separate the proterties in type declaration by `,` or `;` except the last property (optional)
+We can also specify optional properties by using `?` sign after the property name
+
+```ts
+function printName(obj: { first: string; last?: string }) {
+  // ...
+}
+// Both OK
+printName({ first: "Bob" });
+printName({ first: "Alice", last: "Alisson" });
+```
+
+### Union types
+
+Typescript allows use to create new types by combining existing ones with varous operators
+
+- We can declare a union type by using `|` operator between two types. This means that the value can be any one of those types. Each of those types are called *union memebrs*
+
+  ```ts
+  function printId(id: Number | String) {
+    console.log("ID is ", id);
+  }
+  // OK
+  printId(101);
+  // OK
+  printId("202");
+  // Error
+  printId({ myID: 22342 });
+  ```
+
+- Typescript will allow us to do certain things to a value if it's union type. The operations that are supported by all the union members are allowed to be formormed on the value by typescript.
+- If we want to perform special operations for a certain type we have to type check before performing.
+
+### Type aliases
+
+- We can assign names to any type declarations. These are called type aliases. eg:
+
+  ```ts
+  type Point = {
+    x: number,
+    y: number
+  }
+
+  type ID = number | string;
+  ```
+
+- Aliases are only aliases. We can not use alias to declare different versions of the same type. When we use aliases, the aliases act like that they are replaced by type notations itself.
