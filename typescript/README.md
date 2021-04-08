@@ -91,7 +91,7 @@ names.forEach((s) => {
 
 *I think, this applies to function callbacks*
 
-### Object types
+## Object types
 
 To define an object type, we simply list all it's properties along with their respective types. The type part of each property is optional, if not specified, it will be `any` type.
 
@@ -113,7 +113,7 @@ printName({ first: "Bob" });
 printName({ first: "Alice", last: "Alisson" });
 ```
 
-### Union types
+## Union types
 
 Typescript allows use to create new types by combining existing ones with varous operators
 
@@ -134,7 +134,7 @@ Typescript allows use to create new types by combining existing ones with varous
 - Typescript will allow us to do certain things to a value if it's union type. The operations that are supported by all the union members are allowed to be formormed on the value by typescript.
 - If we want to perform special operations for a certain type we have to type check before performing.
 
-### Type aliases
+## Type aliases
 
 - We can assign names to any type declarations. These are called type aliases. eg:
 
@@ -148,3 +148,90 @@ Typescript allows use to create new types by combining existing ones with varous
   ```
 
 - Aliases are only aliases. We can not use alias to declare different versions of the same type. When we use aliases, the aliases act like that they are replaced by type notations itself.
+
+## Interfaces
+
+- An interface declaration is another way of name an object type.
+
+  ```ts
+  interface Point {
+    x: number;
+    y: number
+  }
+
+  function printCoord(pt: Point) {
+    console.log("The coordinate's x value is", pt.x);
+    console.log("The coordinate's y value is", pt.y);
+  }
+  ```
+
+### Difference between `Aliases` and `Interfaces`
+
+- Interfaces and Aliases are mostly similar with a few key differences. Allmost all the features of Interfaces are available on Aliases, the key difference is that a type alias can not be re-openend to add new properties vs an interface is always extendable.
+
+## Type Assertions
+
+- Type assertion is needed when typescript can not know about the exact type of something. eg: typescript knows `document.getElementById()` returns DOM object of type `HTMLElement`, but we may know that it will always return a `HTMLCanvasElement`. So, we may use type assertion to tell typescript the specific type.
+
+  ```ts
+  const canvas = document.getElementById("my_canvas") as HTMLCanvasElement;
+  ```
+
+- Typescript only allows type assertions to a more specific or a less specific type. It prevents coersions like
+
+  ```ts
+  const x = "hello" as number;
+
+  // Conversion of type 'string' to type 'number' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  ```
+
+## Literal Types
+
+- In addition to `strings` and `numbers`, we can specify specific strings or numbers in type positions.
+
+  ```ts
+  let x = "hello world"
+  x = "no way"
+  ```
+  In this case typescript will infer the type of `x` to be `string`.
+
+  ```ts
+  let x = "hello world"
+  ```
+  In this case typescript will infer the type of `x` to the specific string `'hello world'`. This string is called *literal type*
+
+- We can use multiple literal types in Union to make them more useful
+
+  ```ts
+  function printText(s: string, alignment: "left" | "right" | "center") {
+  // ...
+  }
+  printText("Hello, world", "left");
+  printText("G'day, mate", "centre");
+  //Argument of type '"centre"' is not assignable to parameter of type '"left" | "right" | "center"'.
+  ```
+
+- They can also be combined with non literal types
+- There is one more literal type: `boolean` literals. The type `boolean` is an *alias* for *union* `true | false`.
+
+### Literal Interface
+
+- When we initialize a variable with object, typescript assumes that all the properties of that object might change values later. That means it does not infer the initial property values as their literal type.
+
+  ```ts
+  const obj = { counter: 0 };
+  if (someCondition) {
+    obj.counter = 1;
+  }
+  ```
+
+  here, typescript allows the value of `counter` to be changed. It infers the `counter` type to be `number`, not `0`.
+
+- We can use `as const` to convert entier object to be type literals.
+
+  ```ts
+  const req = { url: "https://example.com", method: "GET"} as const;
+  handleRequest(req.url, req.method);
+  ```
+
+  here, typescript forces the `url` and `method` property of `req` object to be example "https://example.com" and "GET" respectively.
