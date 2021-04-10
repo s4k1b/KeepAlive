@@ -1,16 +1,17 @@
 # TypeScript
 
-## Why typescript ?
+## Basics
+### Why typescript ?
 
 - *Static type checking:* Static types systems describe the shapes and behaviors of what our values will be when we run our programs. A type-checker like TypeScript uses that information and tells us when things might be going off the rails.
 - *Non Exception Failure:* Typescript checks what properties of an object are existing and accessible. So, it will throw error when we try to access an object property that does not exist.
 - *Types of Tooling:*TypeScript can deliver “quick fixes” to automatically fix errors, refactorings to easily re-organize code, and useful navigation features for jumping to definitions of a variable, or finding all references to a given variable.
 
-## Why is typescript called the structurally typed type system
+### Why is typescript called the structurally typed type system
 
 Because typescript is only concered with the structure and capabilities of types.
 
-## Compiler
+### Compiler
 
 - *Install* - `npm i -g typescript`
 - *Run* - `tsc <path to your .ts file>`
@@ -19,7 +20,7 @@ Because typescript is only concered with the structure and capabilities of types
   - To prevent the compiler from showing the error run `tsc --noEmitOnError <path to the .ts file>`
   - By default typscript compiler generates javascript code in ES3 (older version). We can set `target` flag to set our target javascript version. eg `tsc --target es2015 <path to the .ts file>`. This will produce javascript code in ES6.
 
-## Strictness
+### Strictness
 
 There are two types of strictness supported by typescript.
 
@@ -49,7 +50,7 @@ Typescript has several typechecking strictness flags, that can be turned on and 
   const n: number = obj;
   ```
 
-## The type annotation of variables
+### The type annotation of variables
 
 In typescript we can explicitely specify the type of a variable by using `let`, `const` or `var`. eg: `let a: string = "sakib"`. But this is not required because typescript can automatically infer the type of a varibe by analyzing it's initializer.
 
@@ -58,7 +59,7 @@ In typescript we can explicitely specify the type of a variable by using `let`, 
 let myName = "Alice";
 ```
 
-## Functions
+### Functions
 
 In typescript, we can specify the types of a funciton's parameter as well as the type of it's return value. eg:
 
@@ -68,7 +69,7 @@ function myFunc(a: string, b: number): string {
 }
 ```
 
-### Anonymous functions
+##### Anonymous functions
 
 When a function appears in place where typescript can automatically determine how it's going to be called, it's parameters are automatically given types. This process is called *contextual typing*, because the *context* in which the function is called informs typescript what types are it's parameters. eg:
 
@@ -91,7 +92,7 @@ names.forEach((s) => {
 
 *I think, this applies to function callbacks*
 
-## Object types
+### Object types
 
 To define an object type, we simply list all it's properties along with their respective types. The type part of each property is optional, if not specified, it will be `any` type.
 
@@ -113,7 +114,7 @@ printName({ first: "Bob" });
 printName({ first: "Alice", last: "Alisson" });
 ```
 
-## Union types
+### Union types
 
 Typescript allows use to create new types by combining existing ones with varous operators
 
@@ -134,7 +135,7 @@ Typescript allows use to create new types by combining existing ones with varous
 - Typescript will allow us to do certain things to a value if it's union type. The operations that are supported by all the union members are allowed to be formormed on the value by typescript.
 - If we want to perform special operations for a certain type we have to type check before performing.
 
-## Type aliases
+### Type aliases
 
 - We can assign names to any type declarations. These are called type aliases. eg:
 
@@ -149,7 +150,7 @@ Typescript allows use to create new types by combining existing ones with varous
 
 - Aliases are only aliases. We can not use alias to declare different versions of the same type. When we use aliases, the aliases act like that they are replaced by type notations itself.
 
-## Interfaces
+### Interfaces
 
 - An interface declaration is another way of name an object type.
 
@@ -165,11 +166,11 @@ Typescript allows use to create new types by combining existing ones with varous
   }
   ```
 
-### Difference between `Aliases` and `Interfaces`
+##### Difference between `Aliases` and `Interfaces`
 
 - Interfaces and Aliases are mostly similar with a few key differences. Allmost all the features of Interfaces are available on Aliases, the key difference is that a type alias can not be re-openend to add new properties vs an interface is always extendable.
 
-## Type Assertions
+### Type Assertions
 
 - Type assertion is needed when typescript can not know about the exact type of something. eg: typescript knows `document.getElementById()` returns DOM object of type `HTMLElement`, but we may know that it will always return a `HTMLCanvasElement`. So, we may use type assertion to tell typescript the specific type.
 
@@ -185,7 +186,7 @@ Typescript allows use to create new types by combining existing ones with varous
   // Conversion of type 'string' to type 'number' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
   ```
 
-## Literal Types
+### Literal Types
 
 - In addition to `strings` and `numbers`, we can specify specific strings or numbers in type positions.
 
@@ -214,7 +215,7 @@ Typescript allows use to create new types by combining existing ones with varous
 - They can also be combined with non literal types
 - There is one more literal type: `boolean` literals. The type `boolean` is an *alias* for *union* `true | false`.
 
-### Literal Interface
+##### Literal Interface
 
 - When we initialize a variable with object, typescript assumes that all the properties of that object might change values later. That means it does not infer the initial property values as their literal type.
 
@@ -235,3 +236,81 @@ Typescript allows use to create new types by combining existing ones with varous
   ```
 
   here, typescript forces the `url` and `method` property of `req` object to be example "https://example.com" and "GET" respectively.
+
+
+### `null` and `undefined`
+
+- `null` and `undefined` are used to signal absent or uninitialized value. In typescript their behaviour depends on the `strictNullChecks` options.
+
+##### `strictNullChecks` off
+
+- Values that might be `null` or `undefined` can be accessed normally and the values `null` and `undefined` can be assigned to a property of any type. This tends to be a major source of bugs. It is recommended to turn the `strictNullChecks` on.
+
+##### `strictNullChecks` on
+
+- While `strctNullChecks` on, when a value is `null` or `undefined` we will need to test those values before using any methods or properties on that value.
+
+  ```ts
+  function doSomething(x: string | undefined) {
+    if (x === undefined) {
+      // do nothing
+    } else {
+      console.log("Hello, " + x.toUpperCase());
+    }
+  }
+  ```
+
+##### Non-null Assertion Operator (Postfix `!`)
+
+- TypeScript als has a special syntex for removing `null` and `undefined` from a tpye without doing any explicit checking. Writing `!` after any expression is effectively a type assertion that the value isn't `null` or `undefined`.
+
+### Enums
+
+- Enums are features added to javascript by typescript. It is not a type level feature added to javascript, rather it is somthing added to the language at runtime.
+- Eunums allows for describing a value which could be one of a set of possible named constants. [Enum reference page](https://www.typescriptlang.org/docs/handbook/enums.html)
+
+
+### Less Common Primitives
+
+- `bigInt` - From ES2020 onwards, there is a primitive in JavaScript used for very large integers
+- `symbol` - A primitive used to create a globally unique reference via the function `Symbol()`
+
+## Narrowing
+
+The process by which typescript uses type guards to narrow down the type of a value which may have multiple types is known as *Narrowing*. Example.
+
+```js
+function padLeft(padding: number | string, input: string) {
+  if (typeof padding === "number") {
+    return new Array(padding + 1).join(" ") + input;
+//                   ^ = (parameter) padding: number
+  }
+  return padding + input;
+  //     ^ = (parameter) padding: string
+}
+```
+
+### `typeof` type guards
+
+- TypeScript uses `typeof` operator of Javascript as type guards. The return value of `typeof` is checked against the following values to perform as type guards in typescript.
+  - `"string"`
+  - `"number"`
+  - `"bigint"`
+  - `"boolean"`
+  - `"symbol"`
+  - `"undefined"`
+  - `"object"`
+  - `"function"`
+
+**For `null` values, the `typeof` operator in javascript doesn't return `"null"`, rather it returns `object`. This may cause some missunderstanding.**
+
+### Truthiness narrowing
+
+- In javascript, some values are falsy values and others are truthiness values. We can pass any value through `if` or negation `!` operation to covert it to boolean according to it's truthiness value. So, the follwoing values will be converted to `false`.
+  - `0`
+  - `NaN`
+  - `""`
+  - `0n` (the `bigInt` version of zero)
+  - `null`
+  - `undefined`
+- We can use this truthiness check before `typeof` to remove the inconvenience caused by `null` values.
