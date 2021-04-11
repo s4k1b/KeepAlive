@@ -314,3 +314,112 @@ function padLeft(padding: number | string, input: string) {
   - `null`
   - `undefined`
 - We can use this truthiness check before `typeof` to remove the inconvenience caused by `null` values.
+
+### Equality narrowing
+
+- TypeScript uses `switch` statements and equality operators like `===, !==, ==, !==` for type narrowing.
+
+  ```ts
+  function example(x: string | number, y: string | boolean) {
+    if (x === y) {
+      // We can now call any 'string' method on 'x' or 'y'.
+      x.toUpperCase();
+  //     ^ = (method) String.toUpperCase(): string
+      y.toLowerCase();
+  //     ^ = (method) String.toLowerCase(): string
+    } else {
+      console.log(x);
+    //            ^ = (parameter) x: string | number
+      console.log(y);
+  //              ^ = (parameter) y: string | boolean
+    }
+  }
+  ```
+
+  `===` operator also checks if x and y have same type and the only common type between them is stirng. So, after that the type is narrowed down to string.
+
+- These type checks can be done agians specific literal values and the narrowing will still work
+
+  ```ts
+  function printAll(strs: string | string[] | null) {
+    if (strs !== null) {
+      if (typeof strs === "object") {
+        for (const s of strs) {
+  //                    ^ = (parameter) strs: string[]
+          console.log(s);
+        }
+      } else if (typeof strs === "string") {
+        console.log(strs);
+      //            ^ = (parameter) strs: string
+      }
+    }
+  }
+  ```
+
+- The `==, !==` operators also get narrowed correctly, if we use `!=null`, it narrows the value to be not undefined and null.
+
+### `instanceof` Narrowing
+
+- The `instanceof` operator in javascript is also a type guard. Typescript also narrows in branches guarded by `instanceof`s.
+
+  ```ts
+  function logValue(x: Date | string) {
+    if (x instanceof Date) {
+      console.log(x.toUTCString());
+  //              ^ = (parameter) x: Date
+    } else {
+      console.log(x.toUpperCase());
+    //            ^ = (parameter) x: string
+    }
+  }
+  ```
+
+### Assignements
+
+- We knowt that, typescript asigns a type to a variabel when it's first assigned a value. It looks at the right side of the assignment operator and assigns a type to the left side appropriately.
+
+  ```ts
+  let x = Math.random() < 0.5 ? 10 : "hello world!";
+  //  ^ = let x: string | number
+  x = 1;
+
+  console.log(x);
+  //          ^ = let x: number
+  x = "goodbye!";
+
+  console.log(x);
+  //          ^ = let x: string
+  ```
+
+  When `x` is firsts assigned a value, the type is declared as `string | number`. So the followign two assignements are valid.
+
+
+### Contorl Flow analysis
+
+- The analysis of code base reachability is known as *control flow analysis*.
+- TypeScript can use this analysis to narrow down the types.
+
+  ```ts
+  function padLeft(padding: number | string, input: string) {
+    if (typeof padding === "number") {
+      return new Array(padding + 1).join(" ") + input;
+    }
+    return padding + input;
+  }
+  ```
+
+  By the time the execution reaches the last line, typescript already knows the type off padding will be `string`.
+
+### Using Type Predicates
+
+- We can define a user defined guard using type predicate. It's simply a function whose return type is a *type predicate*
+
+  ```ts
+  function isFish(pet: Fish | Bird): pet is Fish {
+    return (pet as Fish).swim !== undefined;
+  }
+  ```
+
+  A predicate takes the form `parameterName is Type`. Where `parameterName` is the name of the parameter from the currect function signature. Anytime `isFish` is called, typescript will narrow the type to be `Fish`.
+
+- We can also use `isFish` guard to filter between array of `Fish | Bird`.
