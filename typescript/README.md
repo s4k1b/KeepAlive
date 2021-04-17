@@ -469,3 +469,75 @@ function getArea(shape: Shape) {
 ```
 
 - The `default` block handles the `never` types.
+
+
+## Functions
+
+TypeScript has many ways that describe how functions can be called. Let's learn about how to write types that describe functinons.
+
+### Function Type Expressions
+
+- This type of function type declarations are similar to arrow functions.
+
+```ts
+type GreeterFunction = (a: string) => void;
+function greeter(fn: GreeterFunction) {
+  fn();
+}
+```
+
+### Call Signatures
+
+- In JavaScript functions may have properties in addition to being callable. *Function type expressions* does not provide a way to describe function properties.
+- If we want to describe function properties we need to use *call signatures* in an object type.
+
+```ts
+type DescribableFunction = {
+  description: string;
+  (someArg: number): boolean;
+}
+
+functino doSomething(fn: DescribableFunction) {
+  console.log(fn.description + "returned " + fn(6));
+}
+```
+
+### Constructor Signatures
+
+- In Javascript functions can be invoked using `new` operator. These are called constructor functions.
+- We can declare a function of constructor type in typescript using `new` keyword before a function *call signature*.
+
+```ts
+type SomeConstructor = {
+  new (s: string): SomeObject;
+};
+function fn(ctor: SomeConstructor) {
+  return new ctor("hello");
+}
+```
+
+- We can also combine function *call signature* and *constructor signature* in the same interface
+
+```ts
+interface CallOrConstruct {
+  new (s: string): Date;
+  (n?: number): number;
+}
+```
+
+### Generic Functions
+
+- Sometimes the return value of a function is related to the function input. Suppose a function takes array as paramter and returns the first value of that array. So, if the type of the array is `any[]`, typescript can not infer the return value of the function and it defaults to `any` also.
+- In typescript when we want to describe correspondance between two values (like this case) we use *generics*. It's done by declaring a *type parameter* in the function signature:
+  ```ts
+  function firstElement<Type>(arr: Type[]): Type {
+    return arr[0];
+  }
+  ```
+  By adding type parameter `Type` to this function and using it in two places, we've created a link between the input of the function (the array) and the output (the return value). Now, when we call the function, a more specific *type* comes out.
+  ```ts
+  // s is of type 'string'
+  const s = firstElement(["a", "b", "c"]);
+  // n is of type 'number'
+  const n = firstElement([1, 2, 3])
+  ```
