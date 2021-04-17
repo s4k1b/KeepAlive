@@ -423,3 +423,49 @@ function padLeft(padding: number | string, input: string) {
   A predicate takes the form `parameterName is Type`. Where `parameterName` is the name of the parameter from the currect function signature. Anytime `isFish` is called, typescript will narrow the type to be `Fish`.
 
 - We can also use `isFish` guard to filter between array of `Fish | Bird`.
+
+### Discriminated Unions
+
+- When every type in a union contains a common property with literal types, TypeScript considers that to be a *discriminated union*, and can narrow out the memebers of the union.
+
+```ts
+interface Circle {
+  kind: "circle";
+  radius: number;
+}
+
+interface Square {
+  kind: "square";
+  sideLength: number;
+}
+
+type Shape = Circle | Square;
+```
+
+- In the above example `kind` is the common property (which is considered the *discriminant* property of `Shape`). Checking whether `kind` property is `"circle"` or not will get rid of the all the types where `kind` property is not `"circle"`.
+
+### The `never` type
+
+- When narrowing, we can reduce the options of a union to a point where we have removed all possibilities and have nothing left, In those cases, TypeScript will use a `never` type to represent a state which shouldn't exist.
+
+### Exhaustiveness Checking
+
+- We can use narrowing and rely on `never` turning up to do exhaustive checking in a switch statement.
+
+```ts
+type Shape = Circle | Square;
+
+function getArea(shape: Shape) {
+  switch (shape.kind) {
+    case "circle":
+      return Math.PI * shape.radius ** 2;
+    case "square":
+      return shape.sideLength ** 2;
+    default:
+      const _exhaustiveCheck: never = shape;
+      return _exhaustiveCheck;
+  }
+}
+```
+
+- The `default` block handles the `never` types.
