@@ -541,3 +541,143 @@ interface CallOrConstruct {
   // n is of type 'number'
   const n = firstElement([1, 2, 3])
   ```
+
+#### Inference
+
+- In the above example of *generic function* we didn't have to specify the `Type`, it was inferred automatically.
+- We can use multiple type parameters as well
+
+```ts
+function map<Input, Output>(arr: Input[], func: (arg: Input) => Output): Output[] {
+  return arr.map(func);
+}
+
+// Parameter 'n' is of type 'string'
+// 'parsed' is of type 'number[]'
+const parsed = map(["1", "2", "3"], (n) => parseInt(n));
+```
+
+- Here also, typescript inferred the types of `Input` and `Output` correctly.
+
+#### Constraints
+
+- Sometimes we want to relate two values, but can only operate on a certain subset of values. In this case, we need to use *contraints* to limit the kinds of types that a tpe parameter can accept.
+- Let's write a function that returns the longest value. To do this, we need to access to the length property of those values, for which we need to extend the `Type` parameter:
+
+  ```ts
+  function longest<Type extends { length: number }>(a: Type, b: Type) {
+    if (a.length >= b.length) {
+      return a;
+    } else {
+      return b;
+    }
+  }
+
+  // longerArray is of type 'number[]'
+  const longerArray = longest([1, 2], [1, 2, 3]);
+  // longerString is of type 'string'
+  const longerString = longest("alice", "bob");
+  // Error! Numbers don't have a 'length' property
+  const notOK = longest(10, 100);
+  ```
+
+- Without extending the type parameter, we will get error while accessing the length property, because the parameters can be some other type without any `length` property.
+
+#### Working with Constrained Values
+
+- While working with constrained values, we can not simple return *some* object from a function matching with the constraint.
+
+  ```ts
+  function minimumLength<Type extends { length: number }>(
+    obj: Type,
+    minimum: number
+  ): Type {
+    if (obj.length >= minimum) {
+      return obj;
+    } else {
+      return { length: minimum };
+  /*Type '{ length: number; }' is not assignable to type 'Type'.
+    '{ length: number; }' is assignable to the constraint of type 'Type', but 'Type' could be instantiated with a different subtype of constraint '{ length: number; }'.*/
+    }
+  }
+  ```
+
+- If the above example was legal, then we could write code that definitely wouldn't work
+
+  ```ts
+  // 'arr' gets value { length: 6 }
+  const arr = minimumLength([1, 2, 3], 6);
+  // and crashes here because arrays have
+  // a 'slice' method, but not the returned object!
+  console.log(arr.slice(0));
+  ```
+
+#### Specifying Type Arguments
+
+- When working with generics, TypeScript can not always infer the intended type argumentsin a generic call.
+
+```ts
+function combine<Type>(arr1: Type[], arr2: Type[]): Type[] {
+  return arr1.concat(arr2);
+}
+```
+
+- This will normally give error when called with two different type parameters
+
+```ts
+const arr = combine([1, 2, 3], ["hello"]);
+//Type 'string' is not assignable to type 'number'.
+```
+
+- We can manually specify `Type` to avoid this:
+
+```ts
+const arr = combine<number | string>([1, 2, 3], ["hello"])
+```
+
+#### Guidlines on writing good generic functions
+
+- Avoid too many tye parameters or using constraints where they aren't needed.
+- Push type parameters down
+
+  ```ts
+  function firstElement1<Type>(arr: Type[]) {
+    return arr[0];
+  }
+
+  function firstElement2<Type extends any[]>(arr: Type) {
+    return arr[0];
+  }
+
+  // a: number (good)
+  const a = firstElement1([1, 2, 3]);
+  // b: any (bad)
+  const b = firstElement2([1, 2, 3]);
+  ```
+
+- Use fewer type parameters
+
+  ```ts
+  function filter1<Type>(arr: Type[], func: (arg: Type) => boolean): Type[] {
+    return arr.filter(func);
+  }
+
+  function filter2<Type, Func extends (arg: Type) => boolean>(
+    arr: Type[],
+    func: Func
+  ): Type[] {
+    return arr.filter(func);
+  }
+  ```
+
+- Type parameters should appear atleast twice
+
+  ```ts
+  function greet1<Str extends string>(s: Str) {
+    console.log("Hello, " + s);
+  }
+
+  function greet2(s: string) {
+    console.log("Hello, " + s);
+  }
+  ```
