@@ -681,3 +681,46 @@ const arr = combine<number | string>([1, 2, 3], ["hello"])
     console.log("Hello, " + s);
   }
   ```
+
+### Optional Parameters
+
+- We can specify optional parameter in function signature by using the `?` operator after the parameter name.
+- This will allow the function to be called without that parameter and also `undefined` can be passes as value of that parameter.
+
+```ts
+declare function f(x?: number): void;
+// cut
+// All OK
+f();
+f(10);
+f(undefined);
+```
+
+- We can also pass a default value if not provided.
+
+```ts
+function f(x = 10) {
+  // ...
+}
+```
+
+#### Optional Parameters in Callbacks
+
+- While working with optinal parameters and function type expressions, we can easily make the following mistake
+
+```ts
+function myForEach(arr: any[], callback: (arg: any, index?: number) => void) {
+  for (let i = 0; i < arr.length; i++) {
+    callback(arr[i], i);
+  }
+}
+```
+
+- What we usually intend when writing `index?` as an optional parameter is that we want both of these calls to be legal:
+
+```ts
+myForEach([1, 2, 3], (a) => console.log(a));
+myForEach([1, 2, 3], (a, i) => console.log(a, i));
+```
+
+- Here we failt to notice that, this is function definition, not invoking of the function. The `index` is optional when we invoke the function, not when we define it.
