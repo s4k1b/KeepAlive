@@ -1081,3 +1081,178 @@ draw({ color: "red", raidus: 42 });
 ### Interfaces vs. Intersections
 
 This is basically `Interfaces` vs `Type aliases` again. We can use an `extend` clause to extend from other types in case of interfaces. In case of type aliases, we are able to do similar thing using intersections. The principle difference is how conflicts are handled, and that difference is typically one of the main reason why you'd pick one over the other between an iterface and a type alias of an itersection type.
+
+### Generic Object Types
+
+Generic object types are usefull when we want to declare an object that can contain any type of value in it's properties.
+But we can already achive it by doing the following:
+
+```ts
+interface Box {
+  contents: any;
+}
+```
+
+But, it this case it can lead to problems down the line. Instead we can use `unknown`. But, that would mean that we have to perform type checks before we perform any operations on the value.
+
+```ts
+interface Box {
+  contents: unknown;
+}
+
+let x: Box = {
+  contents: "hello world",
+};
+
+// we could check 'x.contents'
+if (typeof x.contents === "string") {
+  console.log(x.contents.toLowerCase());
+}
+
+// or we could use a type assertion
+console.log((x.contents as string).toLowerCase());
+```
+
+So, to make everything more convenient, we can use *Generic Object Types*.
+
+```ts
+interface Box<Type> {
+  contents: Type
+}
+```
+
+Later, when we refer to Box, we have to give a *type* argument in place of `Type`.
+
+```ts
+let stringBox: Box<string> = {
+  contents: "value"
+};
+```
+
+### The `Array` Type
+
+In typescrip the `Array` type is basically a kind of *Generic Object Type*.
+
+```ts
+interface Array<Type> {
+  /**
+   * Gets or sets the length of the array.
+   */
+  length: number;
+
+  /**
+   * Removes the last element from an array and returns it.
+   */
+  pop(): Type | undefined;
+
+  /**
+   * Appends new elements to an array, and returns the new length of the array.
+   */
+  push(...items: Type[]): number;
+
+  // ...
+}
+```
+Modern JavaScript also provides other data structures which are generic, like `Map<K, V>`, `Set<T>`, and `Promise<T>`. All this really means is that because of how Map, Set, and Promise behave, they can work with any sets of types.
+
+### The `ReadonlyArray` Type
+
+The `ReadonlyArray` type is a special type that describes arrays that shouldn't be changed.
+
+```ts
+function doStuff(values: ReadonlyArray<string>) {
+  // We can read from 'values'...
+  const copy = values.slice();
+  console.log(`The first value is ${values[0]}`);
+
+  // ...but we can't mutate 'values'.
+  values.push("hello!");
+  //Property 'push' does not exist on type 'readonly string[]'.
+}
+```
+
+We can assign regular arrays to readonly arrays to make them readonly. But we can not do the reverse.
+
+```ts
+let x: readonly string[] = [];
+let y: string[] = [];
+
+x = y;
+y = x;
+// The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+```
+
+### Tuple Types
+
+The *tuple type* is another sort of *Array* type that knows exactly how many elements it contains, and exactly which types it contains at specific positions.
+
+```ts
+type StringNumberPair = [string, number];
+```
+
+When we try to access something outside of it's index, we will receive an error
+
+```ts
+function doSomething(pair: [string, number]) {
+  // ...
+
+  const c = pair[2];
+//Tuple type '[string, number]' of length '2' has no element at index '2'.
+}
+```
+
+We can destructure tuples using javascript destructuring.
+
+Tuple types can have optional elements using the `?` operator, but they can only be at the end. It can also affect the length property.
+
+```ts
+type Either2dOr3d = [number, number, number?];
+
+function setCoordinate(coord: Either2dOr3d) {
+  const [x, y, z] = coord;
+
+const z: number | undefined
+
+  console.log(`Provided coordinates had ${coord.length} dimensions`);
+
+//(property) length: 2 | 3
+}
+```
+
+Tuples can also have rest elements, which have to be array to tuple type.
+
+```ts
+type StringNumberBooleans = [string, number, ...boolean[]];
+type StringBooleansNumber = [string, ...boolean[], number];
+type BooleansStringNumber = [...boolean[], string, number];
+```
+
+- `StringNumberBooleans` describes a tuple whose first two elements are `string` and `number` respectively, but which may have any number of `booleans` following.
+- `StringBooleansNumber` describes a tuple whose first element is `string` and then any number of `booleans` and ending with a `number`.
+- `BooleansStringNumber` describes a tuple whose starting elements any number of `booleans` and ending with a `string` then a `number`.
+
+ We can use this to declare functions that can take any number of parameters.
+
+ ```ts
+function readButtonInput(...args: [string, number, ...boolean[]]) {
+  const [name, version, ...input] = args;
+  // ...
+}
+```
+
+### `readonly` Tuple Types
+
+Tuples have a readonly variant. We can declare them by attatching a `readonly` modifier. We can not modify readonly tuples. It is also notable that array literals with `const` assertions will be inferred as `readonly` tuples.
+
+```ts
+let point = [3, 4] as const;
+
+function distanceFromOrigin([x, y]: [number, number]) {
+  return Math.sqrt(x ** 2 + y ** 2);
+}
+
+distanceFromOrigin(point);
+
+/*Argument of type 'readonly [3, 4]' is not assignable to parameter of type '[number, number]'.
+  The type 'readonly [3, 4]' is 'readonly' and cannot be assigned to the mutable type '[number, number]'.*/
+```
