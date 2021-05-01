@@ -817,3 +817,90 @@ const admins = db.filterUsers(function () {
 ```
 
 This pattern is common with callback-style APIs, where another object typically controls when your function is called. Note that you need to use function and not arrow functions to get this behavior
+
+### Other Types to Know About
+
+- `void` - represents return value of a function that doesn't return anything. It's the iferred type anytime a function doesn't return anything. **Void and undefined are not same**.
+- `object` - special type `object` refers to any value that isn't primitive (`string`, `number`, `boolean`, `symbol`, `null` or `undefined`). This is different from empty object type `{}` or global type `Object`.
+- `unknown` - it represents any value. This is similar to `any` type, but is safer because it's not legal to perform anything with `unknow` type value.
+- `never` - used when we need to specify that the function will never return any value. It specifies that the function throws error or terminates execution.
+- `Function` - It's the global type `Function`, describes properties like `bind`, `call`, `apply`.
+
+### Rest Parameters and Arguments
+
+#### Parameters
+
+We can define function that can take *unbounded* number of arguments using the spread operator.
+
+```ts
+function multiply(n: number, ...m: number[]) {
+  return m.map((x) => n * x);
+}
+// 'a' gets value [10, 20, 30, 40]
+const a = multiply(10, 1, 2, 3, 4);
+```
+By default, the type annotations of these parameters are `any[]` if not specified, if specified, it has to be of the form `Array[T]` or `T[]`.
+
+#### Arguments
+
+We can provide a variable number of arguments from an array using spread operator when calling a function.
+
+```ts
+const arr1 = [1, 2, 3];
+const arr2 = [4, 5, 6];
+arr1.push(...arr2);
+```
+
+Typescript sees arrays as mutation objects, this can lead to following error
+
+```ts
+const args = [8, 5];
+const angle = Math.atan2(...args);
+//Expected 2 arguments, but got 0 or more.
+```
+
+It can be solved by,
+
+```ts
+// Inferred as 2-length tuple
+const args = [8, 5] as const;
+// OK
+const angle = Math.atan2(...args);
+```
+
+### Parameter Destructuring
+
+We can destructure an object or array type parameter as an argument into one or more local variables in the function. The type definition of these arguments goes after the destructuring syntax.
+
+```ts
+function sum({ a, b, c }: { a: number; b: number; c: number }) {
+  console.log(a + b + c);
+}
+```
+
+We can use a named type here to make the code look more organized
+
+```ts
+// Same as prior example
+type ABC = { a: number; b: number; c: number };
+function sum({ a, b, c }: ABC) {
+  console.log(a + b + c);
+}
+```
+
+### Assignability of Functions
+
+If a variable is assigned the return value of a function which returns `void`, the type of that variable will be `void` too.
+If a `type` of a function's return value is said to be `void` at definition, it can not return any value.
+
+```ts
+function f2(): void {
+  // @ts-expect-error
+  return true;
+}
+
+const f3 = function (): void {
+  // @ts-expect-error
+  return true;
+};
+```
