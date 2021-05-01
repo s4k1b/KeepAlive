@@ -724,3 +724,96 @@ myForEach([1, 2, 3], (a, i) => console.log(a, i));
 ```
 
 - Here we failt to notice that, this is function definition, not invoking of the function. The `index` is optional when we invoke the function, not when we define it.
+
+### Function Overloads
+
+Sometimes we need our functions to accept a variety of parameters. Let's suppose, we have function that returns a Date object. This function can either accept timeStamp or day, month, year in it's parameter. It typescrip, we can do this by declaring two or more function signatures, along with a signature that will define the function body. These extra fuction signatures are known as *Function Overloads*.
+
+```ts
+function makeDate(timestamp: number): Date;
+function makeDate(m: number, d: number, y: number): Date;
+function makeDate(mOrTimestamp: number, d?: number, y?: number): Date {
+  if (d !== undefined && y !== undefined) {
+    return new Date(y, mOrTimestamp, d);
+  } else {
+    return new Date(mOrTimestamp);
+  }
+}
+const d1 = makeDate(12345678);
+const d2 = makeDate(5, 5, 5);
+// will give error
+const d3 = makeDate(1, 3);
+```
+
+Notice that, we can not call `makeDate` with two parameters.
+
+#### Overload signature and Implementation signature
+
+In the above example, seeing the function implementation signature (the 3rd `makeDate`) we would assume that we can call the `makeDate` function one only two parameters. But, that is not the case. The function implemention signature can not be called directly, as it is kept hidden from the outside. So from the other two signatures of `makeDate` we have to assume that the function will either accept one parameter or three parameters.
+
+The function implementation signature also has to be *compatible* with function overload signatures.
+
+```ts
+function fn(x: boolean): void;
+// Argument type isn't right
+function fn(x: string): void;
+
+//This overload signature is not compatible with its implementation signature.
+function fn(x: boolean) {}
+```
+
+```ts
+function fn(x: string): string;
+// Return type isn't right
+function fn(x: number): boolean;
+
+//This overload signature is not compatible with its implementation signature.
+function fn(x: string | number) {
+  return "oops";
+}
+```
+
+#### Writing Good Overloads
+
+Just like generics, we need to keep in mind before writing overloads that if it's actually required here. For example, let's write a function that will accept a string or an array as parameter and return it's length.
+
+```ts
+function len(s: string): number;
+function len(arr: any[]): number;
+function len(x: any) {
+  return x.length;
+}
+```
+
+This function is fine, we can invoke it with either strings or arrays, but we can not invoke it with value with type `string | array` because typescript will resolve a function call to only one of it's overloads. In this instance we can fix it by not declaring any overloads.
+
+```ts
+function len(x: any[] | string) {
+  return x.length;
+}
+```
+
+#### Declaring `this` in Function
+
+Typescrip will infer what `this` should be in a function via code flow analysis.
+
+```ts
+const user = {
+  id: 123,
+
+  admin: false,
+  becomeAdmin: function () {
+    this.admin = true;
+  },
+};
+```
+Typescrip understands that `user.becomeAdmin` function has a corresponding `this` which is the outer object `user`. This is enough for most cases. But there are a lot of cases where we need more control over what object `this` represents. Typescrip let's use declare the type of `this` in function body, as Javacript does not allow `this` to be declared as parameter.
+
+```ts
+const db = getDB();
+const admins = db.filterUsers(function () {
+  return this.admin;
+});
+```
+
+This pattern is common with callback-style APIs, where another object typically controls when your function is called. Note that you need to use function and not arrow functions to get this behavior
