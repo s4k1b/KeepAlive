@@ -904,3 +904,180 @@ const f3 = function (): void {
   return true;
 };
 ```
+
+## Object Types
+
+Object types can be declared:
+
+- Anonymous
+  ```ts
+  function greet(person: { name: string; age: number }) {
+    return "Hello " + person.age;
+  }
+  ```
+- Interface
+  ```ts
+  interface Person {
+    name: string;
+    age: number;
+  }
+
+  function greet(person: Person) {
+    return "Hello " + person.age;
+  }
+  ```
+- Type alias
+  ```ts
+  type Person = {
+    name: string;
+    age: number;
+  };
+
+  function greet(person: Person) {
+    return "Hello " + person.age;
+  }
+  ```
+
+### Property Modifiers
+
+Each property in an object type can be modified to specify whether the property is *optional* or *readonly*;
+
+#### Optional Properties
+
+We can specify optional properties by using the `?` symbol at the end of their namees.
+
+```ts
+interface PaintOptions {
+  shape: Shape;
+  xPos?: number;
+  yPos?: number;
+}
+
+function paintShape(opts: PaintOptions) {
+  // ...
+}
+
+const shape = getShape();
+paintShape({ shape });
+paintShape({ shape, xPos: 100 });
+paintShape({ shape, yPos: 100 });
+paintShape({ shape, xPos: 100, yPos: 100 });
+```
+
+We can also read from these optional properties, but we have to check for undefined before accessing it's value.
+
+#### Readonly Properties
+
+We can specify a property to be readonly by attaching `readonly` syntax before it's name.
+
+```ts
+interface SomeType {
+  readonly prop: string;
+}
+
+function doSomething(obj: SomeType) {
+  // We can read from 'obj.prop'.
+  console.log(`prop has the value '${obj.prop}'.`);
+
+  // But we can't re-assign it.
+  obj.prop = "hello";
+  // Cannot assign to 'prop' because it is a read-only property.
+}
+```
+
+Readonly properties can be accessed, but can not be modified or set. Readonly modifiers doesn't necessarily imply that the value is totally immutable - or in other worlds the internal contents can be changed.
+
+```ts
+interface Home {
+  readonly resident: { name: string; age: number };
+}
+
+function visitForBirthday(home: Home) {
+  // We can read and update properties from 'home.resident'.
+  console.log(`Happy birthday ${home.resident.name}!`);
+  home.resident.age++;
+}
+
+function evict(home: Home) {
+  // But we can't write to the 'resident' property itself on a 'Home'.
+  home.resident = {
+  //Cannot assign to 'resident' because it is a read-only property.
+    name: "Victor the Evictor",
+    age: 42,
+  };
+}
+```
+
+### Extending Types
+
+We can copy all the properties of one type to another type along with some specific extra properties using the `extend` operator.
+
+```ts
+interface BasicAddress {
+  name?: string;
+  street: string;
+  city: string;
+  country: string;
+  postalCode: string;
+}
+
+interface AddressWithUnit extends BasicAddress {
+  unit: string;
+}
+```
+
+Here, `AddressWithUnit` has all the properties of `BasicAddress` along with an extra property `unit`.
+Interfaces an also extend multiple times.
+
+```ts
+interface Colorful {
+  color: string;
+}
+
+interface Circle {
+  radius: number;
+}
+
+interface ColorfulCircle extends Colorful, Circle {}
+
+const cc: ColorfulCircle = {
+  color: "red",
+  radius: 42,
+};
+```
+
+### Intersection Types
+
+We can combine properties of two types using the `&` operator. This is called the intersection of types.
+
+```ts
+interface Colorful {
+  color: string;
+}
+interface Circle {
+  radius: number;
+}
+
+type ColorfulCircle = Colorful & Circle;
+```
+
+here, the `ColorfulCircle` type has all the properties of `Colorul` and `Circle` types.
+
+```ts
+function draw(circle: Colorful & Circle) {
+  console.log(`Color was ${circle.color}`);
+  console.log(`Radius was ${circle.radius}`);
+}
+
+// okay
+draw({ color: "blue", radius: 42 });
+
+// oops
+draw({ color: "red", raidus: 42 });
+// Argument of type '{ color: string; raidus: number; }' is not assignable to parameter of type 'Colorful & Circle'.
+  //Object literal may only specify known properties, but 'raidus' does not exist in type 'Colorful & Circle'. Did you mean to write 'radius'?
+```
+
+### Interfaces vs. Intersections
+
+This is basically `Interfaces` vs `Type aliases` again. We can use an `extend` clause to extend from other types in case of interfaces. In case of type aliases, we are able to do similar thing using intersections. The principle difference is how conflicts are handled, and that difference is typically one of the main reason why you'd pick one over the other between an iterface and a type alias of an itersection type.
