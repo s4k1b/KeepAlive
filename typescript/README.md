@@ -1256,3 +1256,146 @@ distanceFromOrigin(point);
 /*Argument of type 'readonly [3, 4]' is not assignable to parameter of type '[number, number]'.
   The type 'readonly [3, 4]' is 'readonly' and cannot be assigned to the mutable type '[number, number]'.*/
 ```
+
+## Type Manipulation
+
+In TypeScript, we can express types in terms of other types. By combining various type operators, we can express operations and values in a succinct, maintainable way.
+
+### Generics
+
+#### Working with Generic Type Variables
+
+When we begin to use generics, we'll notice that when we create generic functions, the compiler will enforce that we use the generically type parameters in the body of the function correctly. We should treat these parameters as they can be any type.
+
+```ts
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+```
+
+We can not access the `length` property inside it's body, because the `Type` may not be `Array` or `string`.
+
+```ts
+function loggingIdentity<Type>(arg: Type): Type {
+  console.log(arg.length);
+//Property 'length' does not exist on type 'Type'.
+  return arg;
+}
+```
+
+#### Generic Types
+
+The type of generic functions is just like those of non-generic functions, with the type parameters listed first, similarly to function declarations:
+
+```ts
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+
+let myIdentity: <Type>(arg: Type): Type = identity;
+```
+
+We can also use a different name for the generic type parameter, so long as the number of type variables and how the type variables are used line up.
+
+```ts
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+
+let myIdentity: <Input>(arg: Input): Input = identity;
+```
+
+We can also write the generic type as a call signature of an object literal type:
+
+```ts
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+
+let myIdentity: { <Type>(arg: Type): Type } = identity;
+```
+
+Which leads us to writing our first generic interface. Let’s take the object literal from the previous example and move it to an interface:
+
+```ts
+interface GenericIdentityFn {
+  <Type>(arg: Type): Type;
+}
+
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+
+let myIdentity: GenericIdentityFn = identity;
+```
+
+In a similar example, we may want to move the generic parameter to be a parameter of the whole interface.
+
+```ts
+interface GenericIdentityFn<Type> {
+  (arg: Type): Type;
+}
+
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+
+let myIdentity: GenericIdentityFn<number> = identity;
+```
+
+#### Generic Classes
+
+A generic class has a similar shape to a generic interface. Generic classes have a generic type parameter list in angle brackets (<>) following the name of the class.
+
+```ts
+class GenericNumber<NumType> {
+  zeroValue: NumType;
+  add: (x: NumType, y: NumType) => NumType;
+}
+
+let myGenericNumber = new GenericNumber<number>();
+myGenericNumber.zeroValue = 0;
+myGenericNumber.add = function (x, y) {
+  return x + y;
+};
+```
+
+#### Generic Contraints
+
+Let's say we need our generic type parameter to follow some specific constraints, like it must contain the `length` property. We can do this by using `extends`, we can put our constraint in a type and we can extend the type in our generic type variable:
+
+```ts
+interface Lengthwise {
+  length: number;
+}
+
+function loggingIdentity<Type extends Lengthwise>(arg: Type): Type {
+  console.log(arg.length); // Now we know it has a .length property, so no more error
+  return arg;
+}
+```
+
+#### Using Type Parameters in Generic Constraints
+
+You can declare a type parameter that is constrained by another type parameter. For example, here we’d like to get a property from an object given its name. We’d like to ensure that we’re not accidentally grabbing a property that does not exist on the `obj`, so we’ll place a constraint between the two types:
+
+```ts
+function getProperty<Type, Key extends keyof Type>(obj: Type, key: Key) {
+  return obj[key];
+}
+
+let x = { a: 1, b: 2, c: 3, d: 4 };
+
+getProperty(x, "a");
+getProperty(x, "m"); // error
+```
+
+#### Using Class Types in Generics
+
+When creating factories in TypeScript using generics, it is necessary to refer to class types by their constructor functions. For example,
+
+```ts
+function create<Type>(c: { new (): Type }): Type {
+  return new c();
+}
+```
