@@ -1399,3 +1399,98 @@ function create<Type>(c: { new (): Type }): Type {
   return new c();
 }
 ```
+
+### The `keyof` Operator
+
+The `keyof` operator takes an object type and produces a string or numeric literal union of it's keys:
+
+```ts
+type Point = { x: number; y: number };
+type P = keyof Point;
+```
+
+if the type has string or number index signature, then the `keyof` operator will return those types instead:
+
+```ts
+type Arrayish = { [n: number]: unknown };
+type A = keyof Arrayish;
+
+//type A = number
+
+type Mapish = { [k: string]: boolean };
+type M = keyof Mapish;
+
+//type M = string | number
+```
+
+Note that, here `M = string | number` because, in javascript object keys are always coerced to a string, so obj[0] is always the same as obj["0"].
+
+**`keyof` is extremely useful when working with mapped types**
+
+### The `typeof` Operator
+
+In typescrip the `typeof` operator is used in the *type context* and does the same thing as in javascript, returns the type of the parameter.
+
+```ts
+let s = "hello";
+let n: typeof s;
+```
+
+This can be really powerful tool when combined with other type operators.
+
+**It's only legal to use `typeof` operators on identifiers (ie: variable names) or their properties.**
+
+### Indexed Access Type
+
+We can use *Indexed access type* to look up a specific property on another type.
+
+```ts
+type Person = { age: number; name: string; alive: boolean };
+type Age = Person["age"];
+
+//type Age = number
+```
+
+The indexing literal is it self a type. So we can use type operators here like `keyof`.
+
+```ts
+type I1 = Person["age" | "name"];
+
+//type I1 = string | number
+
+type I2 = Person[keyof Person];
+
+//type I2 = string | number | boolean
+
+type AliveOrName = "alive" | "name";
+type I3 = Person[AliveOrName];
+
+//type I3 = string | boolean
+```
+
+Another use case is that, we can use `number` type to get type of an array's element. It sort of generalizes all the elements of that array.
+
+```ts
+const MyArray = [
+  { name: "Alice", age: 15 },
+  { name: "Bob", age: 23 },
+  { name: "Eve", age: 38 },
+];
+
+type Person = typeof MyArray[number];
+
+// type Person = {
+//     name: string;
+//     age: number;
+// }
+type Age = typeof MyArray[number]["age"];
+
+//type Age = number
+
+// Or
+type Age2 = Person["age"];
+
+//type Age2 = number
+```
+
+**We can only use type when indexing, we can not use `const` or any other type of things.**
